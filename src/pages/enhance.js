@@ -1,20 +1,5 @@
 // ── Enhance Page (Core Feature) ──
 export function renderEnhance() {
-  const models = [
-    { id: 'chatgpt', name: 'ChatGPT', icon: 'smart_toy' },
-    { id: 'claude', name: 'Claude', icon: 'psychology' },
-    { id: 'gemini', name: 'Gemini', icon: 'auto_awesome' },
-    { id: 'cursor', name: 'Cursor', icon: 'code' },
-    { id: 'lovable', name: 'Lovable', icon: 'favorite' },
-    { id: 'bolt', name: 'Bolt.new', icon: 'bolt' },
-  ];
-  const modes = [
-    { id: 'general', label: 'General' },
-    { id: 'developer', label: 'Developer' },
-    { id: 'creative', label: 'Creative' },
-    { id: 'technical', label: 'Technical' },
-  ];
-
   return `
     <section style="margin-top:8px;">
       <div style="text-align:center;margin-bottom:40px;">
@@ -24,24 +9,39 @@ export function renderEnhance() {
         </p>
       </div>
 
-      <!-- Controls Bar -->
-      <div class="card animate-fade-in-up stagger-2" style="display:flex;flex-direction:column;gap:20px;margin-bottom:32px;padding:24px;">
-        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
-          <span class="label-sm" style="color:var(--on-surface-variant);font-weight:600;min-width:70px;text-transform:uppercase;letter-spacing:0.05em;">Mode</span>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            ${modes.map((m, i) => `<button class="chip mode-chip ${i === 0 ? 'active' : ''}" data-mode="${m.id}">${m.label}</button>`).join('')}
+      <!-- Premium Controls Bar -->
+      <div class="card animate-fade-in-up stagger-2" style="margin-bottom:32px; padding:24px;">
+        <div style="display:grid; grid-template-columns:1fr; gap:20px;" id="controls-grid">
+          <!-- Mode Select Wrapper -->
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <span class="label-sm" style="color:var(--on-surface-variant); font-weight:600; text-transform:uppercase; letter-spacing:0.05em;">Optimization Mode</span>
+            <div class="dropdown-select-wrapper">
+              <span class="material-symbols-outlined dropdown-select-icon" id="mode-icon">tune</span>
+              <select id="mode-select" class="dropdown-select">
+                <option value="general" selected>General (Balanced & Professional)</option>
+                <option value="developer">Developer (Code, Architecture, Tech Stack)</option>
+                <option value="creative">Creative (Storytelling, Descriptive, Vivid)</option>
+                <option value="technical">Technical (Precise, Systems & Logic)</option>
+              </select>
+              <span class="material-symbols-outlined dropdown-select-chevron">keyboard_arrow_down</span>
+            </div>
           </div>
-        </div>
-        <div style="height:1px;background:var(--outline-variant);opacity:0.3;margin:4px 0;"></div>
-        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
-          <span class="label-sm" style="color:var(--on-surface-variant);font-weight:600;min-width:70px;text-transform:uppercase;letter-spacing:0.05em;">AI Model</span>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;" id="model-selector">
-            ${models.map((m, i) => `
-              <button class="chip model-chip ${i === 0 ? 'active' : ''}" data-model="${m.id}" style="gap:6px;">
-                <span class="material-symbols-outlined" style="font-size:16px;">${m.icon}</span>
-                ${m.name}
-              </button>
-            `).join('')}
+
+          <!-- AI Model Select Wrapper -->
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <span class="label-sm" style="color:var(--on-surface-variant); font-weight:600; text-transform:uppercase; letter-spacing:0.05em;">Target AI Model</span>
+            <div class="dropdown-select-wrapper">
+              <span class="material-symbols-outlined dropdown-select-icon" id="model-icon">smart_toy</span>
+              <select id="model-select" class="dropdown-select">
+                <option value="chatgpt" selected>ChatGPT (GPT-4o / GPT-4)</option>
+                <option value="claude">Claude (3.5 Sonnet / Opus)</option>
+                <option value="gemini">Gemini (1.5 Pro / Flash)</option>
+                <option value="cursor">Cursor (Developer Assistant)</option>
+                <option value="lovable">Lovable (Full-stack builder)</option>
+                <option value="bolt">Bolt.new (Web container sandbox)</option>
+              </select>
+              <span class="material-symbols-outlined dropdown-select-chevron">keyboard_arrow_down</span>
+            </div>
           </div>
         </div>
       </div>
@@ -80,8 +80,14 @@ export function renderEnhance() {
               </button>
             </div>
           </div>
-          <div id="enhanced-output" style="flex:1;min-height:220px;padding:20px;border-radius:var(--radius);background:var(--surface-container-lowest);border:1px solid var(--outline-variant);font-family:var(--font-sans);font-size:var(--fs-body-md);line-height:1.7;color:var(--on-surface);white-space:pre-wrap;box-shadow:inset 0 2px 8px rgba(0,0,0,0.02);margin-top:8px;">
-            <span style="color:var(--on-surface-variant);font-style:italic;">Your enhanced prompt will appear here...</span>
+          <div id="enhanced-output" class="enhanced-output-container">
+            <div id="enhanced-placeholder" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:var(--on-surface-variant);max-width:320px;padding:20px;text-align:center;">
+              <div style="width:60px;height:60px;border-radius:50%;background:rgba(119,90,25,0.06);display:flex;align-items:center;justify-content:center;margin-bottom:4px;border:1px solid rgba(119,90,25,0.15);box-shadow:0 8px 24px rgba(119,90,25,0.05);animation:float 3s ease-in-out infinite;">
+                <span class="material-symbols-outlined" style="font-size:28px;color:var(--primary);">auto_awesome</span>
+              </div>
+              <p style="font-size:var(--fs-body-lg);font-weight:700;margin:0;color:var(--on-surface);letter-spacing:-0.01em;">Your enhanced prompt will appear here...</p>
+              <p style="font-size:var(--fs-label-sm);opacity:0.75;margin:0;line-height:1.5;">Select a mode and AI model, paste your rough idea in the editor, and click <strong>Enhance Prompt</strong> to transform it.</p>
+            </div>
           </div>
         </div>
       </div>
@@ -104,11 +110,94 @@ export function renderEnhance() {
       @media(min-width:768px){
         #editor-grid { grid-template-columns:1fr 1fr !important; }
         .score-grid { grid-template-columns:repeat(4,1fr) !important; }
+        #controls-grid { grid-template-columns:1fr 1fr !important; }
       }
-      .model-chip.active { background:var(--primary) !important; color:var(--on-primary) !important; }
-      .mode-chip.active { background:var(--primary) !important; color:var(--on-primary) !important; }
       #enhance-btn:disabled { opacity:.6; cursor:not-allowed; }
       .typing-cursor { display:inline-block; width:2px; height:1em; background:var(--primary); animation:blink 1s infinite; margin-left:2px; vertical-align:text-bottom; }
+
+      .dropdown-select-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+        background: var(--surface-container-low);
+        border: 1.5px solid var(--outline-variant);
+        border-radius: var(--radius);
+        height: 52px;
+        padding: 0 16px 0 48px;
+        transition: all 300ms var(--ease-out);
+        cursor: pointer;
+      }
+      .dropdown-select-wrapper:hover {
+        background: var(--surface-container-high);
+        border-color: var(--outline);
+        box-shadow: 0 2px 12px rgba(119, 90, 25, 0.05);
+      }
+      .dropdown-select-wrapper:focus-within {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(119, 90, 25, 0.15);
+      }
+      .dropdown-select-icon {
+        position: absolute;
+        left: 16px;
+        color: var(--primary);
+        font-size: 20px;
+        pointer-events: none;
+        transition: transform 0.3s var(--ease-out);
+      }
+      .dropdown-select-chevron {
+        position: absolute;
+        right: 16px;
+        color: var(--on-surface-variant);
+        font-size: 20px;
+        pointer-events: none;
+      }
+      .dropdown-select {
+        width: 100%;
+        height: 100%;
+        background: transparent;
+        border: none;
+        outline: none;
+        font-family: var(--font-sans);
+        font-size: var(--fs-body-md);
+        font-weight: 500;
+        color: var(--on-surface);
+        cursor: pointer;
+        appearance: none;
+        -webkit-appearance: none;
+        padding-right: 24px;
+      }
+      .enhanced-output-container {
+        flex: 1;
+        min-height: 320px;
+        padding: 24px;
+        border-radius: var(--radius);
+        background: var(--surface-container-lowest);
+        border: 1px solid var(--outline-variant);
+        font-family: var(--font-sans);
+        font-size: var(--fs-body-md);
+        line-height: 1.7;
+        color: var(--on-surface);
+        white-space: pre-wrap;
+        box-shadow: inset 0 2px 8px rgba(0,0,0,0.02);
+        margin-top: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 300ms var(--ease-out);
+      }
+      .enhanced-output-container.has-content {
+        display: block;
+        text-align: left;
+      }
+
+      @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-6px); }
+      }
+      @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
+      }
     </style>
   `;
 }

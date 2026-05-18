@@ -32,7 +32,7 @@ function generateEnhanced(input, mode, model) {
 - Include specific implementation details and examples
 - Structure the output with clear sections and formatting
 - Consider edge cases, error handling, and best practices
-- Optimize for ${model} — use its strengths in reasoning and code generation
+- Optimize for ${model.toUpperCase()} — use its strengths in reasoning and code generation
 
 **Output Format:**
 - Use markdown with headers, bullet points, and code blocks where appropriate
@@ -54,10 +54,15 @@ export function initEnhance() {
   const charCount = document.getElementById('char-count');
   const scoreSection = document.getElementById('score-section');
 
+  const modeSelect = document.getElementById('mode-select');
+  const modeIcon = document.getElementById('mode-icon');
+  const modelSelect = document.getElementById('model-select');
+  const modelIcon = document.getElementById('model-icon');
+
   if (!input || !enhanceBtn) return;
 
-  let currentMode = 'general';
-  let currentModel = 'chatgpt';
+  let currentMode = modeSelect ? modeSelect.value : 'general';
+  let currentModel = modelSelect ? modelSelect.value : 'chatgpt';
 
   // Prefill prompt if dynamic redirect from templates
   const prefilled = localStorage.getItem('pp_prefilled_prompt');
@@ -74,32 +79,56 @@ export function initEnhance() {
     charCount.textContent = `${input.value.length} chars`;
   });
 
-  // Mode chips
-  document.querySelectorAll('.mode-chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      document.querySelectorAll('.mode-chip').forEach(c => c.classList.remove('active'));
-      chip.classList.add('active');
-      currentMode = chip.dataset.mode;
-    });
-  });
+  // Dropdown Icon Maps
+  const modeIcons = {
+    general: 'tune',
+    developer: 'code',
+    creative: 'palette',
+    technical: 'schema'
+  };
 
-  // Model chips
-  document.querySelectorAll('.model-chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      document.querySelectorAll('.model-chip').forEach(c => c.classList.remove('active'));
-      chip.classList.add('active');
-      currentModel = chip.dataset.model;
-    });
-  });
+  const modelIcons = {
+    chatgpt: 'smart_toy',
+    claude: 'psychology',
+    gemini: 'auto_awesome',
+    cursor: 'terminal',
+    lovable: 'favorite',
+    bolt: 'bolt'
+  };
 
-  // Enhance
+  // Optimization Mode Dropdown change listener
+  if (modeSelect) {
+    modeSelect.addEventListener('change', () => {
+      currentMode = modeSelect.value;
+      if (modeIcon && modeIcons[currentMode]) {
+        modeIcon.textContent = modeIcons[currentMode];
+      }
+    });
+  }
+
+  // AI Model Dropdown change listener
+  if (modelSelect) {
+    modelSelect.addEventListener('change', () => {
+      currentModel = modelSelect.value;
+      if (modelIcon && modelIcons[currentModel]) {
+        modelIcon.textContent = modelIcons[currentModel];
+      }
+    });
+  }
+
+  // Enhance Button click listener
   enhanceBtn.addEventListener('click', async () => {
     const text = input.value.trim();
     if (!text) { input.focus(); return; }
 
     enhanceBtn.disabled = true;
     enhanceBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:20px;animation:blink 1s infinite;">auto_awesome</span> Enhancing...';
-    output.innerHTML = '<span class="typing-cursor"></span>';
+    
+    // Switch styling of output container to has-content (left aligned layout)
+    if (output) {
+      output.classList.add('has-content');
+      output.innerHTML = '<span class="typing-cursor"></span>';
+    }
 
     const enhanced = generateEnhanced(text, currentMode, currentModel);
 
@@ -110,34 +139,42 @@ export function initEnhance() {
     enhanceBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:20px;">auto_awesome</span> Enhance Prompt';
 
     // Show scores
-    scoreSection.hidden = false;
-    animateScores();
+    if (scoreSection) {
+      scoreSection.hidden = false;
+      animateScores();
+    }
 
     // Save to history
     saveToHistory(text, enhanced, currentMode, currentModel);
   });
 
-  // Copy
-  copyBtn.addEventListener('click', () => {
-    const text = output.textContent;
-    navigator.clipboard.writeText(text).then(() => {
-      copyBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px;">check</span>';
+  // Copy Clipboard listener
+  if (copyBtn) {
+    copyBtn.addEventListener('click', () => {
+      const text = output ? output.textContent : '';
+      if (!text) return;
+      navigator.clipboard.writeText(text).then(() => {
+        copyBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px;">check</span>';
+        setTimeout(() => {
+          copyBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px;">content_copy</span>';
+        }, 2000);
+      });
+    });
+  }
+
+  // Save Bookmark listener
+  if (saveBtn) {
+    saveBtn.addEventListener('click', () => {
+      saveBtn.innerHTML = '<span class="material-symbols-outlined filled" style="font-size:16px;">bookmark</span>';
       setTimeout(() => {
-        copyBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px;">content_copy</span>';
+        saveBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px;">bookmark_border</span>';
       }, 2000);
     });
-  });
-
-  // Save
-  saveBtn.addEventListener('click', () => {
-    saveBtn.innerHTML = '<span class="material-symbols-outlined filled" style="font-size:16px;">bookmark</span>';
-    setTimeout(() => {
-      saveBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px;">bookmark_border</span>';
-    }, 2000);
-  });
+  }
 }
 
 async function typeText(el, text, speed = 10) {
+  if (!el) return;
   el.textContent = '';
   for (let i = 0; i < text.length; i++) {
     el.textContent += text[i];
