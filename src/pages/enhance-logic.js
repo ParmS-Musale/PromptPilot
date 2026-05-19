@@ -45,6 +45,68 @@ function generateEnhanced(input, mode, model) {
 - Include relevant tech stack recommendations if applicable`;
 }
 
+async function callGeminiAPI(text, mode, model) {
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  if (!apiKey || apiKey === 'YOUR_COPIED_GEMINI_KEY_HERE') {
+    throw new Error('API key is not configured');
+  }
+
+  const modeInstructions = {
+    general: 'clear, professional, and comprehensive',
+    developer: 'senior full-stack engineer, technical, implementation-ready with industry best practices',
+    creative: 'world-class creative director and storyteller, imaginative, vivid, and emotionally engaging',
+    technical: 'technical architect, precise, detailed, architecture patterns, and scalability considerations',
+  };
+
+  const selectedStyle = modeInstructions[mode] || modeInstructions.general;
+
+  const systemInstruction = `You are PromptPilot, an expert AI prompt engineer.
+Your task is to take a raw, poorly structured user prompt and transform it into a premium, optimized prompt.
+The enhanced prompt must be tailor-made for the target AI model: "${model.toUpperCase()}".
+The optimization mode is: "${mode.toUpperCase()}".
+
+Guidelines for enhancement:
+1. Act as a professional prompt engineer.
+2. Structure the enhanced prompt clearly using clean markdown (use headers, bullet points, numbered lists, and code blocks as appropriate).
+3. The prompt should adopt a persona/role suitable for the task, list clear step-by-step requirements, specify the expected output format, list constraints, and include considerations for edge cases.
+4. Adhere strictly to the requested mode style: "${selectedStyle}".
+5. IMPORTANT: Your response must contain ONLY the final enhanced prompt itself. Do NOT include any conversational introduction, pleasantries, or explanations like "Here is your enhanced prompt:". The user must be able to copy the entire response and paste it directly as a ready-to-run prompt.`;
+
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                text: `${systemInstruction}\n\nRaw prompt to enhance:\n"${text}"`
+              }
+            ]
+          }
+        ]
+      })
+    }
+  );
+
+  if (!response.ok) {
+    const errData = await response.json().catch(() => ({}));
+    throw new Error(errData.error?.message || `HTTP error ${response.status}`);
+  }
+
+  const data = await response.json();
+  const enhancedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!enhancedText) {
+    throw new Error('Invalid response structure from Gemini API');
+  }
+
+  return enhancedText.trim();
+}
+
 export function initEnhance() {
   const input = document.getElementById('prompt-input');
   const output = document.getElementById('enhanced-output');
@@ -130,7 +192,13 @@ export function initEnhance() {
       output.innerHTML = '<span class="typing-cursor"></span>';
     }
 
-    const enhanced = generateEnhanced(text, currentMode, currentModel);
+    let enhanced = '';
+    try {
+      enhanced = await callGeminiAPI(text, currentMode, currentModel);
+    } catch (error) {
+      console.warn('Gemini API call failed, falling back to local template engine:', error);
+      enhanced = generateEnhanced(text, currentMode, currentModel);
+    }
 
     // Simulate typing
     await typeText(output, enhanced, 8);
