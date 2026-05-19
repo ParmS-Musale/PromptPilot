@@ -1,4 +1,6 @@
 // ── Shared Navbar Component ──
+import { supabase } from '../lib/supabase.js';
+
 if (typeof document !== 'undefined') {
   document.addEventListener('click', () => {
     const openDropdowns = document.querySelectorAll('.profile-dropdown.open');
@@ -161,15 +163,9 @@ export function renderNavbar(activeRoute = '') {
 
   const logoutBtns = nav.querySelectorAll('.btn-logout');
   logoutBtns.forEach(btn => {
-    btn.addEventListener('click', (e) => {
+    btn.addEventListener('click', async (e) => {
       e.stopPropagation();
-      localStorage.removeItem('pp_user');
-      const currentActive = window.location.hash.replace('#/', '').replace('#', '') || '';
-      const newNavbar = renderNavbar(currentActive);
-      const currentNavbar = document.querySelector('.navbar');
-      if (currentNavbar) {
-        currentNavbar.replaceWith(newNavbar);
-      }
+      await supabase.auth.signOut();
     });
   });
 

@@ -3,11 +3,12 @@ import { renderNavbar } from './components/navbar.js';
 import { renderFooter } from './components/footer.js';
 import { renderLanding } from './pages/landing.js';
 import { renderEnhance } from './pages/enhance.js';
-import { renderTemplates } from './pages/templates.js';
-import { renderHistory } from './pages/history.js';
+import { renderTemplates, initTemplates } from './pages/templates.js';
+import { renderHistory, initHistory } from './pages/history.js';
 import { renderPricing } from './pages/pricing.js';
 import { renderDocs } from './pages/docs.js';
 import { renderAbout } from './pages/about.js';
+import { supabase } from './lib/supabase.js';
 
 const routes = {
   '': renderLanding,
@@ -127,15 +128,9 @@ function initPageScripts(route) {
   if (route === 'enhance') {
     import('./pages/enhance-logic.js').then(m => m.initEnhance());
   } else if (route === 'templates') {
-    import('./pages/templates.js').then(m => m.initTemplates());
+    initTemplates();
   } else if (route === 'history') {
-    const clearBtn = document.getElementById('clear-history');
-    if (clearBtn) {
-      clearBtn.addEventListener('click', () => {
-        localStorage.removeItem('pp_history');
-        render();
-      });
-    }
+    initHistory();
   } else if (route === 'docs') {
     // Docs sidebar logic
     const docsLinks = document.querySelectorAll('.docs-link');
@@ -158,6 +153,32 @@ function initPageScripts(route) {
 window.addEventListener('scroll', () => {
   const nav = document.querySelector('.navbar');
   if (nav) nav.classList.toggle('scrolled', window.scrollY > 20);
+});
+
+// Sync Supabase Auth state with local storage and trigger UI updates
+supabase.auth.onAuthStateChange((event, session) => {
+  const currentUser = JSON.parse(localStorage.getItem('pp_user'));
+  
+  if (session && session.user) {
+    const name = session.user.user_metadata?.name || 
+                 session.user.user_metadata?.full_name || 
+                 session.user.email.split('@')[0];
+    const user = {
+      id: session.user.id,
+      email: session.user.email,
+      name: name
+    };
+    
+    if (!currentUser || currentUser.email !== user.email || currentUser.id !== user.id) {
+      localStorage.setItem('pp_user', JSON.stringify(user));
+      render();
+    }
+  } else {
+    if (currentUser) {
+      localStorage.removeItem('pp_user');
+      render();
+    }
+  }
 });
 
 window.addEventListener('hashchange', render);

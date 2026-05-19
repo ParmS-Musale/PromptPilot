@@ -1,4 +1,5 @@
 // ── Enhance Page Logic (mock AI) ──
+import { supabase } from '../lib/supabase.js';
 const enhancementMap = {
   general: {
     prefix: 'Act as an expert assistant.',
@@ -270,16 +271,36 @@ function animateScores() {
   });
 }
 
-function saveToHistory(original, enhanced, mode, model) {
-  const history = JSON.parse(localStorage.getItem('pp_history') || '[]');
-  history.unshift({
-    id: Date.now(),
-    original,
-    enhanced,
-    mode,
-    model,
-    date: new Date().toISOString(),
-  });
-  if (history.length > 50) history.pop();
-  localStorage.setItem('pp_history', JSON.stringify(history));
+async function saveToHistory(original, enhanced, mode, model) {
+  const user = JSON.parse(localStorage.getItem('pp_user'));
+  
+  if (user) {
+    try {
+      const { error } = await supabase.from('history').insert({
+        original,
+        enhanced,
+        mode,
+        model,
+        user_id: user.id
+      });
+      if (error) {
+        console.error('Failed to save to Supabase history:', error);
+      }
+    } catch (err) {
+      console.error('Error saving history to Supabase:', err);
+    }
+  } else {
+    // Guest user: save to localStorage
+    const history = JSON.parse(localStorage.getItem('pp_history') || '[]');
+    history.unshift({
+      id: Date.now(),
+      original,
+      enhanced,
+      mode,
+      model,
+      date: new Date().toISOString(),
+    });
+    if (history.length > 50) history.pop();
+    localStorage.setItem('pp_history', JSON.stringify(history));
+  }
 }

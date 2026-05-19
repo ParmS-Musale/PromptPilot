@@ -1,4 +1,5 @@
 // ── Auth Modal Component ──
+import { supabase } from '../lib/supabase.js';
 
 export function openAuthModal(onSuccessCallback) {
   const existing = document.getElementById('auth-modal');
@@ -45,6 +46,10 @@ export function openAuthModal(onSuccessCallback) {
               </div>
             </div>
 
+            <div class="validation-error" id="signin-general-error" style="margin-bottom: 12px; display: none; align-items: center; gap: 8px; color: #ff4d4f; font-size: 13px;">
+              <span class="material-symbols-outlined" style="font-size:16px;">error</span>
+              <span class="error-text"></span>
+            </div>
             <button type="submit" class="btn btn-gold" style="width: 100%; margin-top: 8px;">
               <span>Sign In</span>
             </button>
@@ -95,6 +100,10 @@ export function openAuthModal(onSuccessCallback) {
               </div>
             </div>
 
+            <div class="validation-error" id="signup-general-error" style="margin-bottom: 12px; display: none; align-items: center; gap: 8px; color: #ff4d4f; font-size: 13px;">
+              <span class="material-symbols-outlined" style="font-size:16px;">error</span>
+              <span class="error-text"></span>
+            </div>
             <button type="submit" class="btn btn-gold" style="width: 100%; margin-top: 8px;">
               <span>Create Account</span>
             </button>
@@ -221,8 +230,21 @@ export function openAuthModal(onSuccessCallback) {
     }, 1800);
   };
 
-  signinForm.addEventListener('submit', (e) => {
+  const setGeneralError = (prefix, message) => {
+    const errorEl = modal.querySelector(`#${prefix}-general-error`);
+    if (errorEl) {
+      if (message) {
+        errorEl.querySelector('.error-text').textContent = message;
+        errorEl.style.display = 'flex';
+      } else {
+        errorEl.style.display = 'none';
+      }
+    }
+  };
+
+  signinForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    setGeneralError('signin', null);
     const email = modal.querySelector('#signin-email').value.trim();
     const password = modal.querySelector('#signin-password').value;
 
@@ -244,21 +266,29 @@ export function openAuthModal(onSuccessCallback) {
 
     if (!isValid) return;
 
-    // Simulate network latency
     const submitBtn = signinForm.querySelector('button[type="submit"]');
     const originalContent = submitBtn.innerHTML;
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px; animation: blink 1s infinite;">hourglass_empty</span> Validating...';
 
-    setTimeout(() => {
-      // Derive name from email for mock login
-      const name = email.split('@')[0].split(/[._-]/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-      showSuccessState(name, email);
-    }, 1200);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      
+      const user = data.user;
+      const name = user.user_metadata?.name || user.email.split('@')[0].split(/[._-]/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+      showSuccessState(name, user.email);
+    } catch (err) {
+      console.error('Sign in error:', err);
+      setGeneralError('signin', err.message || 'An error occurred during sign in');
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalContent;
+    }
   });
 
-  signupForm.addEventListener('submit', (e) => {
+  signupForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    setGeneralError('signup', null);
     const name = modal.querySelector('#signup-name').value.trim();
     const email = modal.querySelector('#signup-email').value.trim();
     const password = modal.querySelector('#signup-password').value;
@@ -296,36 +326,75 @@ export function openAuthModal(onSuccessCallback) {
 
     if (!isValid) return;
 
-    // Simulate network latency
     const submitBtn = signupForm.querySelector('button[type="submit"]');
+    const originalContent = submitBtn.innerHTML;
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px; animation: blink 1s infinite;">hourglass_empty</span> Registering...';
 
-    setTimeout(() => {
-      showSuccessState(name, email);
-    }, 1200);
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { name }
+        }
+      });
+      if (error) throw error;
+      
+      const user = data.user;
+      if (user) {
+        showSuccessState(name, email);
+      } else {
+        showSuccessState(name, email);
+      }
+    } catch (err) {
+      console.error('Sign up error:', err);
+      setGeneralError('signup', err.message || 'An error occurred during registration');
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalContent;
+    }
   });
 
-  // Simulated social provider logins
+  // Social provider logins
   modal.querySelectorAll('.btn-social').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const provider = btn.dataset.provider;
+    btn.addEventListener('click', async () => {
+      const provider = btn.dataset.provider.toLowerCase();
       
-      // Simulate OAuth redirect loader
       const modalBody = modal.querySelector('.modal-body');
+      const originalBodyContent = modalBody.innerHTML;
+      
       modalBody.innerHTML = `
         <div class="auth-success-screen">
           <span class="material-symbols-outlined" style="font-size: 48px; color: var(--primary); animation: blink 1.2s infinite; margin-bottom: 20px;">sync</span>
-          <h4 class="headline-sm" style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">Connecting to ${provider}...</h4>
+          <h4 class="headline-sm" style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">Connecting to ${btn.dataset.provider}...</h4>
           <p class="body-md" style="color: var(--on-surface-variant); max-width: 250px;">
-            Simulating secure single sign-on authentication handshake.
+            Redirecting you to secure single sign-on page.
           </p>
         </div>
       `;
 
-      setTimeout(() => {
-        showSuccessState('Demo Pilot', 'demo@promptpilot.com');
-      }, 1500);
+      try {
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: provider === 'github' ? 'github' : 'google',
+          options: {
+            redirectTo: window.location.origin
+          }
+        });
+        if (error) throw error;
+      } catch (err) {
+        console.error('Social auth error:', err);
+        modalBody.innerHTML = `
+          <div style="text-align:center; padding: 20px; color: #ff4d4f;">
+            <span class="material-symbols-outlined" style="font-size: 48px; margin-bottom: 12px;">error</span>
+            <p>${err.message || 'Social auth failed'}</p>
+            <button class="btn btn-outline btn-sm" id="btn-retry-auth" style="margin-top:16px;">Try Again</button>
+          </div>
+        `;
+        modalBody.querySelector('#btn-retry-auth').addEventListener('click', () => {
+          modalBody.innerHTML = originalBodyContent;
+          openAuthModal(onSuccessCallback); // Re-bind
+        });
+      }
     });
   });
 }
