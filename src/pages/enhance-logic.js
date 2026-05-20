@@ -46,7 +46,7 @@ function generateEnhanced(input, mode, model) {
 - Include relevant tech stack recommendations if applicable`;
 }
 
-function calculateLocalScoresAndSuggestions(text, mode, model) {
+function calculateLocalScores(text, mode, model) {
   const cleaned = text.trim();
   const wordCount = cleaned.split(/\s+/).filter(Boolean).length;
   
@@ -54,15 +54,12 @@ function calculateLocalScoresAndSuggestions(text, mode, model) {
   let detail = 40;
   let compat = 50;
   let structure = 40;
-  const suggestions = [];
 
   // Clarity assessment
   if (wordCount < 5) {
     clarity = 30;
-    suggestions.push("Your prompt is very short. Describe the task in more detail to improve clarity.");
   } else if (wordCount < 15) {
     clarity = 60;
-    suggestions.push("Add a specific role or context to help the AI understand your perspective.");
   } else {
     clarity = 80 + Math.min(15, Math.floor(wordCount / 5));
   }
@@ -70,7 +67,6 @@ function calculateLocalScoresAndSuggestions(text, mode, model) {
   // Detail assessment
   if (wordCount < 10) {
     detail = Math.max(20, wordCount * 4);
-    suggestions.push("Describe the technologies, formats, or criteria you want the AI to use.");
   } else {
     detail = Math.min(95, 45 + Math.floor(wordCount * 1.5));
   }
@@ -80,17 +76,12 @@ function calculateLocalScoresAndSuggestions(text, mode, model) {
   const hasTech = techKeywords.some(kw => cleaned.toLowerCase().includes(kw));
   if (!hasTech && (mode === 'developer' || mode === 'technical')) {
     detail = Math.max(30, detail - 15);
-    suggestions.push("Specify the programming languages, frameworks, or libraries (e.g., React, Node) you want to use.");
   }
 
   // AI Compatibility assessment
   const aiKeywords = ['act as', 'persona', 'role', 'format', 'output', 'constraint', 'limit', 'rule', 'do not', 'should'];
   const matchedAiKeywords = aiKeywords.filter(kw => cleaned.toLowerCase().includes(kw)).length;
   compat = Math.min(98, 50 + (matchedAiKeywords * 12));
-  
-  if (matchedAiKeywords === 0) {
-    suggestions.push("Use prompt engineering patterns like role assignment ('Act as...') and negative constraints ('Do not...').");
-  }
 
   // Structure assessment
   const hasNewlines = cleaned.includes('\n');
@@ -100,10 +91,8 @@ function calculateLocalScoresAndSuggestions(text, mode, model) {
     structure = 90;
   } else if (hasNewlines) {
     structure = 70;
-    suggestions.push("Use bullet points or numbered lists to structure your requirements clearly.");
   } else {
     structure = 45;
-    suggestions.push("Organize your prompt into distinct sections (e.g., Task, Requirements, Output Format) using line breaks.");
   }
 
   // Ensure reasonable bounds
@@ -112,14 +101,7 @@ function calculateLocalScoresAndSuggestions(text, mode, model) {
   compat = Math.max(10, Math.min(98, compat));
   structure = Math.max(10, Math.min(98, structure));
 
-  if (suggestions.length === 0) {
-    suggestions.push("Your prompt is well-optimized! Try applying it to different models to compare outputs.");
-  }
-
-  return {
-    scores: { clarity, detail, compat, structure },
-    suggestions
-  };
+  return { clarity, detail, compat, structure };
 }
 
 async function callGeminiAPI(text, mode, model) {
@@ -147,23 +129,7 @@ Guidelines for enhancement:
 2. Structure the enhanced prompt clearly using clean markdown (use headers, bullet points, numbered lists, and code blocks as appropriate).
 3. The prompt should adopt a persona/role suitable for the task, list clear step-by-step requirements, specify the expected output format, list constraints, and include considerations for edge cases.
 4. Adhere strictly to the requested mode style: "${selectedStyle}".
-
-You must respond with a JSON object in this exact format:
-{
-  "enhanced": "The fully enhanced prompt content here, formatted in markdown.",
-  "scores": {
-    "clarity": <integer between 0 and 100>,
-    "detail": <integer between 0 and 100>,
-    "compat": <integer between 0 and 100>,
-    "structure": <integer between 0 and 100>
-  },
-  "suggestions": [
-    "<string explaining what was missing or how to improve the original prompt>",
-    "<another feedback point>"
-  ]
-}
-
-Ensure your response is valid JSON and contains no other text outside the JSON block.`;
+5. IMPORTANT: Your response must contain ONLY the final enhanced prompt itself. Do NOT include any conversational introduction, pleasantries, or explanations like "Here is your enhanced prompt:". The user must be able to copy the entire response and paste it directly as a ready-to-run prompt.`;
 
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
@@ -181,10 +147,7 @@ Ensure your response is valid JSON and contains no other text outside the JSON b
               }
             ]
           }
-        ],
-        generationConfig: {
-          responseMimeType: "application/json"
-        }
+        ]
       })
     }
   );
@@ -195,22 +158,12 @@ Ensure your response is valid JSON and contains no other text outside the JSON b
   }
 
   const data = await response.json();
-  const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!textResponse) {
+  const enhancedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!enhancedText) {
     throw new Error('Invalid response structure from Gemini API');
   }
 
-  try {
-    return JSON.parse(textResponse.trim());
-  } catch (parseError) {
-    console.warn("Gemini returned invalid JSON, attempting raw parsing fallback:", parseError);
-    const fallbackAnalysis = calculateLocalScoresAndSuggestions(text, mode, model);
-    return {
-      enhanced: textResponse,
-      scores: fallbackAnalysis.scores,
-      suggestions: fallbackAnalysis.suggestions
-    };
-  }
+  return enhancedText.trim();
 }
 
 export function initEnhance() {
@@ -298,21 +251,15 @@ export function initEnhance() {
       output.innerHTML = '<span class="typing-cursor"></span>';
     }
 
-    let enhancedText = '';
-    let scoresObj = null;
-    let suggestionsArr = [];
+    // Calculate scores locally based on raw prompt
+    const scoresObj = calculateLocalScores(text, currentMode, currentModel);
 
+    let enhancedText = '';
     try {
-      const result = await callGeminiAPI(text, currentMode, currentModel);
-      enhancedText = result.enhanced;
-      scoresObj = result.scores;
-      suggestionsArr = result.suggestions;
+      enhancedText = await callGeminiAPI(text, currentMode, currentModel);
     } catch (error) {
       console.warn('Gemini API call failed, falling back to local template engine:', error);
       enhancedText = generateEnhanced(text, currentMode, currentModel);
-      const localAnalysis = calculateLocalScoresAndSuggestions(text, currentMode, currentModel);
-      scoresObj = localAnalysis.scores;
-      suggestionsArr = localAnalysis.suggestions;
     }
 
     // Simulate typing
@@ -326,9 +273,6 @@ export function initEnhance() {
       scoreSection.hidden = false;
       animateScores(scoresObj);
     }
-
-    // Show suggestions
-    displaySuggestions(suggestionsArr);
 
     // Save to history
     saveToHistory(text, enhancedText, currentMode, currentModel);
@@ -390,23 +334,7 @@ function animateScores(scores) {
   });
 }
 
-function displaySuggestions(suggestions) {
-  const listEl = document.getElementById('suggestions-list');
-  const containerEl = document.getElementById('suggestions-container');
-  if (!listEl) return;
 
-  listEl.innerHTML = '';
-  if (suggestions && suggestions.length > 0) {
-    if (containerEl) containerEl.style.display = 'block';
-    suggestions.forEach(s => {
-      const li = document.createElement('li');
-      li.textContent = s;
-      listEl.appendChild(li);
-    });
-  } else {
-    if (containerEl) containerEl.style.display = 'none';
-  }
-}
 
 async function saveToHistory(original, enhanced, mode, model) {
   const user = JSON.parse(localStorage.getItem('pp_user'));

@@ -102,14 +102,6 @@ export function renderEnhance() {
             ${scoreItem('AI Compatibility', 0, 'compat')}
             ${scoreItem('Structure', 0, 'structure')}
           </div>
-          <!-- Quality Suggestions -->
-          <div id="suggestions-container" style="margin-top:24px; padding-top:16px; border-top:1px solid var(--outline-variant); display:none;">
-            <h4 class="label-sm" style="text-transform:uppercase;letter-spacing:.05em;color:var(--primary);margin-bottom:12px;font-weight:600;display:flex;align-items:center;gap:6px;">
-              <span class="material-symbols-outlined" style="font-size:16px;">info</span> Suggestions for Improvement
-            </h4>
-            <ul id="suggestions-list" style="margin:0; padding-left:20px; color:var(--on-surface-variant); font-size:var(--fs-body-md); line-height:1.6; display:flex; flex-direction:column; gap:8px;">
-            </ul>
-          </div>
         </div>
       </div>
     </section>
