@@ -280,7 +280,11 @@ export function openAuthModal(onSuccessCallback) {
       showSuccessState(name, user.email);
     } catch (err) {
       console.error('Sign in error:', err);
-      setGeneralError('signin', err.message || 'An error occurred during sign in');
+      let errorMsg = err.message || 'An error occurred during sign in';
+      if (errorMsg.includes('invalid') || errorMsg.includes('not authorized')) {
+        errorMsg += '. (Tip: Check if this email domain is whitelisted or blocked in your Supabase Auth dashboard.)';
+      }
+      setGeneralError('signin', errorMsg);
       submitBtn.disabled = false;
       submitBtn.innerHTML = originalContent;
     }
@@ -349,7 +353,13 @@ export function openAuthModal(onSuccessCallback) {
       }
     } catch (err) {
       console.error('Sign up error:', err);
-      setGeneralError('signup', err.message || 'An error occurred during registration');
+      let errorMsg = err.message || 'An error occurred during registration';
+      if (errorMsg.includes('invalid') || errorMsg.includes('not authorized')) {
+        errorMsg += '. (Tip: Go to Supabase Dashboard -> Auth -> Providers -> Email and turn off "Confirm email", or verify Allowed Email Domains.)';
+      } else if (errorMsg.includes('rate limit')) {
+        errorMsg += '. (Tip: Supabase rate limits default email delivery. Disable "Confirm email" in Auth settings to bypass verification.)';
+      }
+      setGeneralError('signup', errorMsg);
       submitBtn.disabled = false;
       submitBtn.innerHTML = originalContent;
     }
