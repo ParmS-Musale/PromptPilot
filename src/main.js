@@ -5,7 +5,7 @@ import { renderLanding } from './pages/landing.js';
 import { renderEnhance } from './pages/enhance.js';
 import { renderTemplates, initTemplates } from './pages/templates.js';
 import { renderHistory, initHistory } from './pages/history.js';
-import { renderPricing } from './pages/pricing.js';
+import { renderPricing, initPricing } from './pages/pricing.js';
 import { renderDocs } from './pages/docs.js';
 import { renderAbout } from './pages/about.js';
 import { supabase } from './lib/supabase.js';
@@ -131,6 +131,8 @@ function initPageScripts(route) {
     initTemplates();
   } else if (route === 'history') {
     initHistory();
+  } else if (route === 'pricing') {
+    initPricing();
   } else if (route === 'docs') {
     // Docs sidebar logic
     const docsLinks = document.querySelectorAll('.docs-link');
@@ -173,9 +175,10 @@ supabase.auth.onAuthStateChange((event, session) => {
       localStorage.setItem('pp_user', JSON.stringify(user));
       render();
     }
-  } else {
+  } else if (event === 'SIGNED_OUT') {
     if (currentUser) {
       localStorage.removeItem('pp_user');
+      localStorage.removeItem('pp_user_tier');
       render();
     }
   }

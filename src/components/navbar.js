@@ -13,6 +13,7 @@ export function renderNavbar(activeRoute = '') {
   nav.className = 'navbar';
   
   const user = JSON.parse(localStorage.getItem('pp_user'));
+  const tier = localStorage.getItem('pp_user_tier') || 'Free';
   const links = [
     { href: '#/', label: 'Home', route: '' },
     { href: '#/enhance', label: 'Enhance', route: 'enhance' },
@@ -26,15 +27,21 @@ export function renderNavbar(activeRoute = '') {
 
   if (user) {
     const initials = user.name ? user.name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase() : 'PP';
+    const isPro = tier === 'Pro' || tier === 'Enterprise';
+    const tierBadge = isPro ? `<span style="background:linear-gradient(135deg, #DFBA6B, #C29A38);color:#121212;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;text-transform:uppercase;letter-spacing:.05em;margin-left:8px;vertical-align:middle;display:inline-block;box-shadow:0 2px 4px rgba(223,186,107,0.3)">${tier}</span>` : '';
     desktopActions = `
       <div class="user-profile-menu">
         <button class="avatar-btn">${initials}</button>
         <div class="profile-dropdown">
           <div class="dropdown-header">
-            <div class="user-name">${user.name}</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div class="user-name">${user.name}</div>
+              ${tierBadge}
+            </div>
             <div class="user-email">${user.email}</div>
           </div>
           <a href="#/history"><span class="material-symbols-outlined">history</span> History</a>
+          ${isPro ? `<button class="btn-downgrade-test" style="width:100%;text-align:left;background:none;border:none;padding:8px 12px;font-size:14px;color:var(--on-surface-variant);display:flex;align-items:center;gap:8px;cursor:pointer;"><span class="material-symbols-outlined">restart_alt</span> Cancel Pro Sub</button>` : ''}
           <button class="btn-logout"><span class="material-symbols-outlined">logout</span> Sign Out</button>
         </div>
       </div>
@@ -42,11 +49,15 @@ export function renderNavbar(activeRoute = '') {
     mobileActions = `
       <div class="mobile-profile-info" style="display:flex;align-items:center;gap:12px;margin-bottom:16px;padding:12px;background:rgba(0,0,0,0.02);border-radius:var(--radius-sm);border:1px solid var(--outline-variant);">
         <div class="avatar-btn" style="width:38px;height:38px;border-radius:50%;background:var(--primary-container);color:var(--on-primary-container);border:1.5px solid var(--primary);display:flex;align-items:center;justify-content:center;font-weight:700;">${initials}</div>
-        <div style="min-width:0; text-align: left;">
-          <div class="user-name" style="font-weight:600;font-size:14px;color:var(--on-surface);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${user.name}</div>
+        <div style="min-width:0; text-align: left; flex-grow: 1;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div class="user-name" style="font-weight:600;font-size:14px;color:var(--on-surface);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${user.name}</div>
+            ${tierBadge}
+          </div>
           <div class="user-email" style="font-size:12px;color:var(--on-surface-variant);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${user.email}</div>
         </div>
       </div>
+      ${isPro ? `<button class="btn btn-outline btn-downgrade-test" style="width:100%;margin-bottom:8px;"><span class="material-symbols-outlined">restart_alt</span> Cancel Pro Sub</button>` : ''}
       <button class="btn btn-outline btn-logout" style="width:100%">
         <span class="material-symbols-outlined">logout</span>
         Sign Out
@@ -166,6 +177,22 @@ export function renderNavbar(activeRoute = '') {
     btn.addEventListener('click', async (e) => {
       e.stopPropagation();
       await supabase.auth.signOut();
+    });
+  });
+
+  const downgradeBtns = nav.querySelectorAll('.btn-downgrade-test');
+  downgradeBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      localStorage.removeItem('pp_user_tier');
+      alert("Your subscription has been cancelled/downgraded successfully.");
+      const currentActive = window.location.hash.replace('#/', '').replace('#', '') || '';
+      const newNavbar = renderNavbar(currentActive);
+      const currentNavbar = document.querySelector('.navbar');
+      if (currentNavbar) {
+        currentNavbar.replaceWith(newNavbar);
+      }
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
     });
   });
 
