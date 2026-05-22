@@ -198,6 +198,102 @@ export function renderEnhance() {
         0%, 100% { opacity: 1; }
         50% { opacity: 0; }
       }
+
+      /* Flying Plane Loader Styles */
+      .plane-loader-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        padding: 40px;
+        width: 100%;
+        text-align: center;
+        animation: fadeIn 0.4s ease-out;
+      }
+      
+      .plane-wrapper {
+        position: relative;
+        width: 80px;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: radial-gradient(circle, rgba(197, 160, 89, 0.12) 0%, rgba(197, 160, 89, 0) 70%);
+      }
+      
+      .plane-icon {
+        font-size: 38px !important;
+        color: var(--primary);
+        transform: rotate(-5deg);
+        animation: planeFly 2.2s ease-in-out infinite;
+      }
+      
+      .plane-trail {
+        position: absolute;
+        width: 32px;
+        height: 2px;
+        background: linear-gradient(to right, rgba(197, 160, 89, 0.4), rgba(197, 160, 89, 0));
+        bottom: 28px;
+        left: 14px;
+        transform: rotate(-45deg);
+        transform-origin: left center;
+        animation: trailPulse 2.2s ease-in-out infinite;
+      }
+
+      .loader-dots {
+        display: flex;
+        gap: 6px;
+        justify-content: center;
+        margin-top: 10px;
+      }
+
+      .loader-dot {
+        width: 6px;
+        height: 6px;
+        background: var(--primary);
+        border-radius: 50%;
+        animation: dotPulse 1.2s infinite ease-in-out both;
+      }
+
+      .loader-dot:nth-child(1) { animation-delay: -0.32s; }
+      .loader-dot:nth-child(2) { animation-delay: -0.16s; }
+
+      @keyframes planeFly {
+        0%, 100% {
+          transform: rotate(-45deg) translate(0, 0);
+        }
+        25% {
+          transform: rotate(-43deg) translate(5px, -5px);
+        }
+        50% {
+          transform: rotate(-47deg) translate(-2px, 2px);
+        }
+        75% {
+          transform: rotate(-44deg) translate(7px, -7px);
+        }
+      }
+
+      @keyframes trailPulse {
+        0%, 100% {
+          width: 20px;
+          opacity: 0.5;
+        }
+        50% {
+          width: 38px;
+          opacity: 0.15;
+        }
+      }
+
+      @keyframes dotPulse {
+        0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+        40% { transform: scale(1.2); opacity: 1; }
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; transform: scale(0.96); }
+        to { opacity: 1; transform: scale(1); }
+      }
     </style>
   `;
 }

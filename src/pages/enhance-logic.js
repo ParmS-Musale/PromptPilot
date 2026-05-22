@@ -46,6 +46,14 @@ function generateEnhanced(input, mode, model) {
 - Include relevant tech stack recommendations if applicable`;
 }
 
+function cleanMarkdown(text) {
+  if (!text) return '';
+  return text
+    .replace(/^#+\s*(.*)$/gm, '$1') // Remove markdown header hashes
+    .replace(/\*{1,2}/g, '')        // Remove bold/italic asterisks
+    .trim();
+}
+
 function calculateLocalScores(text, mode, model) {
   const cleaned = text.trim();
   const wordCount = cleaned.split(/\s+/).filter(Boolean).length;
@@ -245,10 +253,25 @@ export function initEnhance() {
     enhanceBtn.disabled = true;
     enhanceBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:20px;animation:blink 1s infinite;">auto_awesome</span> Enhancing...';
     
-    // Switch styling of output container to has-content (left aligned layout)
+    // Set loading animation with flying plane (centered layout)
     if (output) {
-      output.classList.add('has-content');
-      output.innerHTML = '<span class="typing-cursor"></span>';
+      output.classList.remove('has-content');
+      output.innerHTML = `
+        <div class="plane-loader-container">
+          <div class="plane-wrapper">
+            <span class="material-symbols-outlined plane-icon">flight_takeoff</span>
+            <div class="plane-trail"></div>
+          </div>
+          <div style="font-weight: 600; color: var(--on-surface); font-size: 15px;">
+            AI Engine is crafting your prompt...
+            <div class="loader-dots">
+              <div class="loader-dot"></div>
+              <div class="loader-dot"></div>
+              <div class="loader-dot"></div>
+            </div>
+          </div>
+        </div>
+      `;
     }
 
     // Calculate scores locally based on raw prompt
@@ -260,6 +283,14 @@ export function initEnhance() {
     } catch (error) {
       console.warn('Gemini API call failed, falling back to local template engine:', error);
       enhancedText = generateEnhanced(text, currentMode, currentModel);
+    }
+
+    enhancedText = cleanMarkdown(enhancedText);
+
+    // Switch styling of output container to has-content (left aligned layout) for typing
+    if (output) {
+      output.classList.add('has-content');
+      output.innerHTML = '<span class="typing-cursor"></span>';
     }
 
     // Simulate typing
