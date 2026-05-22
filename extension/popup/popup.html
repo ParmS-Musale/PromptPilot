@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PromptPilot Configuration</title>
+  <!-- Google Fonts & Material Symbols -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">
+        <span class="material-symbols-outlined logo-icon">flight_takeoff</span>
+        <span class="logo-text">PromptPilot</span>
+      </div>
+      <button class="settings-toggle-btn" id="settings-toggle" title="Settings">
+        <span class="material-symbols-outlined">settings</span>
+      </button>
+    </header>
+
+    <!-- Main Content Card -->
+    <main class="main-card">
+      <!-- Mode Selection -->
+      <div class="control-group">
+        <label class="control-label">Optimization Mode</label>
+        <div class="dropdown-wrapper">
+          <span class="material-symbols-outlined dropdown-icon" id="mode-icon">tune</span>
+          <select id="mode-select" class="dropdown-select">
+            <option value="general" selected>General (Balanced)</option>
+            <option value="developer">Developer (Code & Architecture)</option>
+            <option value="creative">Creative (Story & Vivid)</option>
+            <option value="technical">Technical (Systems & Logic)</option>
+          </select>
+          <span class="material-symbols-outlined chevron-icon">keyboard_arrow_down</span>
+        </div>
+      </div>
+
+      <!-- Target Model Selection -->
+      <div class="control-group">
+        <label class="control-label">Target AI Model</label>
+        <div class="dropdown-wrapper">
+          <span class="material-symbols-outlined dropdown-icon" id="model-icon">smart_toy</span>
+          <select id="model-select" class="dropdown-select">
+            <option value="chatgpt" selected>ChatGPT</option>
+            <option value="claude">Claude</option>
+            <option value="gemini">Gemini</option>
+            <option value="cursor">Cursor</option>
+            <option value="lovable">Lovable</option>
+            <option value="bolt">Bolt.new</option>
+          </select>
+          <span class="material-symbols-outlined chevron-icon">keyboard_arrow_down</span>
+        </div>
+      </div>
+
+      <!-- Info Footer -->
+      <div class="info-footer">
+        <span class="material-symbols-outlined info-icon">info</span>
+        <span>The "Enhance" button in your chat input will use these active settings.</span>
+      </div>
+    </main>
+
+    <!-- Collapsible Settings Panel -->
+    <div class="settings-panel" id="settings-panel">
+      <div class="settings-header">
+        <h3>Settings</h3>
+      </div>
+      
+      <!-- API Key Field -->
+      <div class="control-group">
+        <label class="control-label">Gemini API Key</label>
+        <div class="api-key-input-wrapper">
+          <input type="password" id="api-key-input" placeholder="Enter API Key" />
+          <button id="api-key-toggle-visibility" class="api-key-visibility-btn" type="button">
+            <span class="material-symbols-outlined" id="visibility-icon">visibility</span>
+          </button>
+        </div>
+        <p class="api-key-tip">By default, PromptPilot uses your preconfigured .env key.</p>
+      </div>
+
+      <!-- API Key Save Button -->
+      <button class="btn btn-save" id="api-key-save">
+        <span class="material-symbols-outlined">save</span>
+        <span>Save Key</span>
+      </button>
+
+      <!-- Status Indicator -->
+      <div class="status-section">
+        <div class="status-badge" id="api-status">
+          <span class="material-symbols-outlined status-icon" id="status-badge-icon">check_circle</span>
+          <span id="status-badge-text">Pre-loaded Key Active</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast" id="toast">Settings Saved!</div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
