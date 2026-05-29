@@ -1,6 +1,7 @@
 // ── PromptPilot Popup Logic ──
 
-const DEFAULT_GEMINI_KEY = "AIzaSyAtUKnhPZlyVIe6fjnpItdyi_f-L-wbGbk";
+// IMPORTANT: Do NOT hardcode API keys here. Users must set their own key via the extension popup.
+const DEFAULT_GEMINI_KEY = "";
 
 // Selectors
 const modeSelect = document.getElementById("mode-select");
@@ -85,8 +86,8 @@ function updateStatusBadge(isCustom) {
     statusBadgeText.textContent = "Custom Key Active";
   } else {
     apiStatus.className = "status-badge preloaded";
-    statusBadgeIcon.textContent = "check_circle";
-    statusBadgeText.textContent = "Pre-loaded Key Active";
+    statusBadgeIcon.textContent = "warning";
+    statusBadgeText.textContent = "No API Key — Please add your Gemini key";
   }
 }
 

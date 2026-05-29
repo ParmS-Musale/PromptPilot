@@ -1,6 +1,7 @@
 // ── PromptPilot Background Service Worker ──
 
-const DEFAULT_GEMINI_KEY = "AIzaSyAtUKnhPZlyVIe6fjnpItdyi_f-L-wbGbk";
+// IMPORTANT: Do NOT hardcode API keys here. Users must set their own key via the extension popup.
+const DEFAULT_GEMINI_KEY = "";
 
 // Initialize defaults on install
 chrome.runtime.onInstalled.addListener(() => {
